@@ -1,30 +1,24 @@
-const express = require('express');
-const jwt = require('jsonwebtoken');
-let books = require("./booksdb.js");
-const regd_users = express.Router();
+const express = require("express");
+const auth_users = express.Router();
+const users = {}; // Store user data here
 
-let users = [];
+auth_users.delete("/review/:isbn", (req, res) => {
+  const isbn = req.params.isbn;
 
-const isValid = (username)=>{ //returns boolean
-//write code to check is the username is valid
-}
+  if (!req.session.accessToken) {
+    return res.status(401).send("You need to login first");
+  }
 
-const authenticatedUser = (username,password)=>{ //returns boolean
-//write code to check if username and password match the one we have in records.
-}
+  const decoded = jwt.verify(req.session.accessToken, "your_jwt_secret_key");
+  const username = decoded.username;
+  const book = books[isbn];
 
-//only registered users can login
-regd_users.post("/login", (req,res) => {
-  //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
+  if (book && book.reviews[username]) {
+    delete book.reviews[username];
+    res.send("Review deleted successfully");
+  } else {
+    res.status(404).send("Review not found");
+  }
 });
 
-// Add a book review
-regd_users.put("/auth/review/:isbn", (req, res) => {
-  //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
-});
-
-module.exports.authenticated = regd_users;
-module.exports.isValid = isValid;
-module.exports.users = users;
+module.exports = auth_users;
